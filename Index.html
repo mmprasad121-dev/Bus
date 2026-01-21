@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Passenger Safety System</title>
+
+<!-- Leaflet Map CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f5;
+    margin: 0;
+    padding: 10px;
+}
+
+h2 {
+    text-align: center;
+    color: #003366;
+}
+
+.container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.panel {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+textarea, input, button {
+    width: 100%;
+    margin-top: 5px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.chat {
+    height: 140px;
+    overflow-y: auto;
+    background: #f1f6ff;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.msg { margin: 5px 0; }
+.passenger { color: green; }
+.admin { color: red; }
+
+#map {
+    height: 250px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Smart Passenger Safety System<br>Live GPS Tracking</h2>
+
+<div class="container">
+
+<!-- PASSENGER -->
+<div class="panel">
+    <h3>🚍 Passenger Panel</h3>
+    <textarea id="pMsg" placeholder="Enter emergency message..."></textarea>
+    <button onclick="sendAlert()">Send Emergency Alert</button>
+    <div class="chat" id="pChat"></div>
+</div>
+
+<!-- ADMIN -->
+<div class="panel">
+    <h3>🛂 Admin Panel</h3>
+
+    <div id="map"></div>
+
+    <div class="chat" id="aChat"></div>
+
+    <input id="aReply" placeholder="Type reply to passenger...">
+    <button onclick="sendReply()">Send Reply</button>
+</div>
+
+</div>
+
+<!-- Leaflet Map JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+let map = L.map('map').setView([12.9716, 77.5946], 13); // Default location
+let marker;
+
+// Load map tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// LIVE GPS TRACKING
+if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(position => {
+        let lat = position.coords.latitude;
+        let lng = position.coords.longitude;
+
+        if (!marker) {
+            marker = L.marker([lat, lng]).addTo(map)
+                     .bindPopup("🚍 Passenger Location")
+                     .openPopup();
+        } else {
+            marker.setLatLng([lat, lng]);
+        }
+
+        map.setView([lat, lng], 16);
+    }, () => {
+        alert("Location permission denied");
+    });
+} else {
+    alert("Geolocation not supported");
+}
+
+// PASSENGER ALERT
+function sendAlert() {
+    let msg = document.getElementById("pMsg").value;
+    if (msg === "") return;
+
+    let html = "<div class='msg passenger'><b>Passenger:</b> " + msg + "</div>";
+    document.getElementById("pChat").innerHTML += html;
+    document.getElementById("aChat").innerHTML += html;
+
+    document.getElementById("pMsg").value = "";
+}
+
+// ADMIN REPLY
+function sendReply() {
+    let reply = document.getElementById("aReply").value;
+    if (reply === "") return;
+
+    let html = "<div class='msg admin'><b>Admin:</b> " + reply + "</div>";
+    document.getElementById("aChat").innerHTML += html;
+    document.getElementById("pChat").innerHTML += html;
+
+    document.getElementById("aReply").value = "";
+}
+</script>
+
+</body>
+</html>
